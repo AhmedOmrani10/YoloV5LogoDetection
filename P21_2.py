@@ -7,8 +7,12 @@ from gpiozero import LED
 import RPi.GPIO as GPIO
 import time
 
+
+AUTOMAT_PIN = 33
 BUTTON_PIN = 22
 GPIO.setmode(GPIO.BOARD)
+
+GPIO.setup(AUTOMAT_PIN, GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(BUTTON_PIN, GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
 
 led_connection =LED(17)
@@ -31,10 +35,14 @@ model.conf = 0.85
 
 
 state = False
+image_count = 0
+
 def toggle_led(BUTTON_PIN):
 	global state
 
 	state = not(state)
+
+
 
 
 
@@ -118,9 +126,15 @@ def continues_mode():
                     break
        
 
-def optimal_mode():
-        
-        while state:
+def optimal_mode(image_count,state_automat):
+        print("enter")
+        print(state)
+        print(str(image_count)+"2")
+        print(str(state_automat)+"2")
+        while state and image_count ==1 and state_automat ==1:
+                print("here")
+                print(image_count)
+                print(state_automat)
                 print("optimal")
                 connected = False
                 
@@ -128,7 +142,7 @@ def optimal_mode():
                     try:
 
                         imgResponse = urllib.request.urlopen("http://192.168.43.117/capture?",timeout = 5)
-                        time.sleep(5)
+                        
                         led_connection.on()
                         print("done")
                         connected = True
@@ -193,12 +207,16 @@ def optimal_mode():
                                 led_defective1.on()
                                 led_defective2.on()
                                 led_defective3.on()
+                
 
-
+                
                 frame = np.squeeze(result.render())
+                
              #   cv.imshow('FRAME',frame)
                 if cv.waitKey(500)&0xFF==27:
                     break
+                
+                break
         
 
 
@@ -207,8 +225,17 @@ GPIO.add_event_detect(BUTTON_PIN, GPIO.BOTH, callback=toggle_led,bouncetime=500)
                
 try:
     while True:
+        
+        state_automat = GPIO.input(AUTOMAT_PIN)
+        print("autmat state  = "+ str(state_automat))
+        
+        if(state_automat==0):
+                image_count = 1
+                print("image add")
         continues_mode()
-        optimal_mode()
+        optimal_mode(image_count,state_automat)
+        if(state_automat ==1):
+                image_count =0
         
  
         
