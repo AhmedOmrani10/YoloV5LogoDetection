@@ -13,5 +13,5 @@ pip install subprocess.run
 pip install time
 git clone https://github.com/AhmedOmrani10/YoloV5LogoDetection.git
 cd YoloV5LogoDetection
-mv P21_3 /home/pi/Desktop/project/yolov5
-mv bestV2 /home/pi/Desktop/project/yolov5
+mv P21_3.py /home/pi/Desktop/project/yolov5
+mv bestV2.pt /home/pi/Desktop/project/yolov5
