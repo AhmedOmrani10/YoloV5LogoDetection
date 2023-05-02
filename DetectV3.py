@@ -36,6 +36,7 @@ while True:
             bbox_height_normal = None
 
         if bbox_height_part and bbox_height_normal:
+            #ratio =  bbox_height_part /bbox_height_normal
             #print("Ratio of heights:", ratio)
             #print(" bbox_height_part"+str( bbox_height_part))
             #print("height"+str(bbox_height_normal//2))
