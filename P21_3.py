@@ -189,8 +189,9 @@ def show_result(result,width):
                             x1, y1n, x2, y2n = row[:4].astype(int)
                             bbox_height_normal = y2n - y1n
                         if bbox_height_part and bbox_height_normal:
+                            #ratio_position determine if the font of the word is missed up or no
                             ratio_position =  bbox_height_part /bbox_height_normal
-                            # it has to be between 31 and 38
+                            #ratio_word determine if the logo is low. It has to be between 31 and 38
                             ratio_word = (y1-y1n)*100//(y2n-y1n)
                             bbox_height_part = None
                             bbox_height_normal = None
