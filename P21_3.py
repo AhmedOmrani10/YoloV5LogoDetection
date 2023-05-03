@@ -125,7 +125,7 @@ def control_led(state_code):
         led_defective2.off()
         led_defective3.on()
     elif state_code == "011":
-        print("Inversed")
+        print("Inverted")
         led_correct.off()
         led_defective1.off()
         led_defective2.on()
@@ -137,13 +137,13 @@ def control_led(state_code):
         led_defective2.off()
         led_defective3.off()
     elif state_code == "101":
-        print("Titled_right")
+        print("Font wrong")
         led_correct.off()
         led_defective1.on()
         led_defective2.off()
         led_defective3.on()
     elif state_code == "110":
-        print("Titled_right")
+        print("logo is under")
         led_correct.off()
         led_defective1.on()
         led_defective2.on()
@@ -168,37 +168,42 @@ def control_led(state_code):
                         
 # Define a function to show the results of the prediction        
 def show_result(result,width):
-         bbox_height_part = None
-         bbox_height_normal = None
-
+        bbox_height_part = None
+        bbox_height_normal = None
         if(result.pandas().xyxy[0].empty):
                 control_led("001")
                     
-        else:
-                    #(000 : normal /001: nothing  / 011: inversed /100 : left /101: titled_right/110:tilted_left)
-
+        else:  
+                   #(000 : normal /001: nothing  / 011: inversed /100 : left /101: titled_right/110:tilted_left)
                     for index,row in  result.pandas().xyxy[0].iterrows():
-                        print(row[6])
                         # Define a bounding box
                         xmin, ymin, xmax, ymax = row[0], row[1],row[2],row[3]
                         # Calculate the center of the bounding box
                         center_x = (xmin + xmax) / 2
                         if(center_x < width/2):
                                 control_led("100")
+                        if row[6] == "part":
+                            x1, y1, x2, y2 = row[:4].astype(int)
+                            bbox_height_part = y2 - y1
+                        elif row[6] == "Normal":
+                            x1, y1n, x2, y2n = row[:4].astype(int)
+                            bbox_height_normal = y2n - y1n
+                        if bbox_height_part and bbox_height_normal:
+                            ratio_position =  bbox_height_part /bbox_height_normal
+                            # it has to be between 31 and 38
+                            ratio_word = (y1-y1n)*100//(y2n-y1n)
+                            bbox_height_part = None
+                            bbox_height_normal = None
+                            if(ratio_word>40):
+                                control_led("101")
+                            if(ratio_word>0.51):
+                                control_led("110")
                         else:
                             if row[6] == "Normal":
                                     control_led("000")
-                                    
-                    
-
                             if row[6] == "Inverted" :
                                     control_led("011")
-                     
-                            if row[6] == "Titled_right" :
-                                    control_led("101")
-                    
-                            if row[6] == "Titled_left":
-                                    control_led("110")
+                                   
                     
 
 
@@ -285,6 +290,13 @@ try:
            
         if state and image_count ==1 and state_automat ==1:
                 image_count,  state_automat = optimal_mode(image_count,state_automat)
+      
+        
+      
+               
+        
+ 
+        
 
 except KeyboardInterrupt:
     GPIO.cleanup()
