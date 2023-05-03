@@ -168,6 +168,9 @@ def control_led(state_code):
                         
 # Define a function to show the results of the prediction        
 def show_result(result,width):
+         bbox_height_part = None
+         bbox_height_normal = None
+
         if(result.pandas().xyxy[0].empty):
                 control_led("001")
                     
@@ -188,7 +191,7 @@ def show_result(result,width):
                                     
                     
 
-                            if row[6] == "Inversed" :
+                            if row[6] == "Inverted" :
                                     control_led("011")
                      
                             if row[6] == "Titled_right" :
@@ -282,13 +285,6 @@ try:
            
         if state and image_count ==1 and state_automat ==1:
                 image_count,  state_automat = optimal_mode(image_count,state_automat)
-      
-        
-      
-               
-        
- 
-        
 
 except KeyboardInterrupt:
     GPIO.cleanup()
