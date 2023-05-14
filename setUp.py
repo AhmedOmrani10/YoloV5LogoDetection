@@ -111,8 +111,8 @@ class setUp:
             
                         
             
-    else:
-        print("Invalid state code")
+        else:
+            print("Invalid state code")
 
     def show_result(self, result, width):
         bbox_height_part = None
