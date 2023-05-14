@@ -68,10 +68,7 @@ class setUp:
         self.image_count = 1
         self.state_automat = 1
 
-    def control_temperature(self):
-        temperature_c = subprocess.check_output(["vcgencmd", "measure_temp"]).decode("utf-8")
-        temperature_c = float(temperature_c.replace("temp=", "").replace("'C\n", ""))
-        print("Temperature: {:.2f}°C".format(temperature_c))
+    
 
     def check_connection(self):
         connected = False
@@ -124,21 +121,23 @@ class setUp:
                     x1, y1, x2, y2 = row[:4].astype(int)
                     bbox_height_part = y2 - y1
                 elif row[6] == "Normal":
-                    x1, y1n, x2, y2n = row[:4].astype(int)
+                    x1n, y1n, x2, y2n = row[:4].astype(int)
                     bbox_height_normal = y2n - y1n
                 if bbox_height_part and bbox_height_normal:
                     ratio_position = bbox_height_part / bbox_height_normal
                     ratio_word = (y1 - y1n) * 100 // (y2n - y1n)
                     bbox_height_part = None
                     bbox_height_normal = None
-                    if ratio_word > 40:
+                    if ratio_position > 40:
                         self.control_led("101")
-                    if ratio_word > 0.51:
+                    else:
+                        self.control_led("000")   
+                    if ratio_word > 50:
                         self.control_led("110")
-                else:
-                    if row[6] == "Normal":
-                        self.control_led("000")
-                    if row[6] == "Inverted":
+                    else:
+                        self.control_led("000")   
+
+                if row[6] == "Inverted":
                         self.control_led("011")
 
     def continues_mode(self):
