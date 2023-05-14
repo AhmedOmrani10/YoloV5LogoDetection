@@ -89,22 +89,55 @@ class setUp:
         # (000: normal / 001: nothing / 011: reversed on x axis / 100: left / 101: tilted_right / 110: tilted_left)
         if state_code == "000":
             print("Normal")
+            self.led_correct.on()
+            self.led_defective1.off()
+            self.led_defective2.off()
+            self.led_defective3.off()
         elif state_code == "001":
             print("Nothing")
+            self.led_correct.off()
+            self.led_defective1.off()
+            self.led_defective2.off()
+            self.led_defective3.on()
         elif state_code == "011":
-            print("Inverted")
+            print("Inversed")
+            self.led_correct.off()
+            self.led_defective1.off()
+            self.led_defective2.on()
+            self.led_defective3.on()
         elif state_code == "100":
             print("Left")
+            self.led_correct.off()
+            self.led_defective1.on()
+            self.led_defective2.off()
+            self.led_defective3.off()
         elif state_code == "101":
-            print("Font wrong")
+            print("Titled_right")
+            self.led_correct.off()
+            self.led_defective1.on()
+            self.led_defective2.off()
+            self.led_defective3.on()
         elif state_code == "110":
-            print("Logo is under")
+            print("Titled_right")
+            self.led_correct.off()
+            self.led_defective1.on()
+            self.led_defective2.on()
+            self.led_defective3.on()
         elif state_code == "111":
-            print("Failed...")
-        elif state_code == "1":
-            print("Done")
-        else:
-            print("Invalid state code")
+            print("failed...")
+            self.led_ready.off()
+            self.led_correct.off()
+            self.led_defective1.on()
+            self.led_defective2.on()
+            self.led_defective3.on()
+        elif state_code =="1":
+            self.led_ready.on()
+            print("done")
+            
+                        
+            
+    else:
+        print("Invalid state code")
 
     def show_result(self, result, width):
         bbox_height_part = None
