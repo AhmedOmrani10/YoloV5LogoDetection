@@ -29,12 +29,13 @@ class setUp:
         self.RESULT_READY_PIN = 35
         self.CORRECT_PIN = 18
         self.DEFECTIVE1_PIN = 27
-        self.DEFECTIVE2_PIN = 22
-        self.DEFECTIVE3_PIN = 24
+        self.SIGNAL_PIN = 22
+       
 
         # Set up the GPIO pins
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.RESULT_READY_PIN, GPIO.OUT)
+        GPIO.setup(self.RESULT_READY_PIN, GPIO.OUT)       
+        GPIO.setup(self.self.SIGNAL_PIN, GPIO.OUT)
         GPIO.setup(self.AUTOMAT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
@@ -42,15 +43,13 @@ class setUp:
         self.led_ready = LED(self.READY_PIN)
         self.led_correct = LED(self.CORRECT_PIN)
         self.led_defective1 = LED(self.DEFECTIVE1_PIN)
-        self.led_defective2 = LED(self.DEFECTIVE2_PIN)
-        self.led_defective3 = LED(self.DEFECTIVE3_PIN)
+        
 
         # Turn off the LEDs
         self.led_ready.off()
         self.led_correct.off()
         self.led_defective1.off()
-        self.led_defective2.off()
-        self.led_defective3.off()
+       
 
         # Load the custom-trained computer vision model
         self.model = torch.hub.load('.', 'custom', path='bestV2.pt', source='local')
@@ -60,79 +59,55 @@ class setUp:
         # Set up an interrupt for the button
         GPIO.add_event_detect(self.BUTTON_PIN, GPIO.BOTH, callback=self.change_state, bouncetime=500)
         GPIO.add_event_detect(self.AUTOMAT_PIN, GPIO.RISING, callback=self.change_image_count, bouncetime=500)
-
+       
+    # This function alter between optimal mode and continues mode
     def change_state(self, BUTTON_PIN):
         self.state = not self.state
-
+        
+    # This function change the image_count and the state_automat to 1
     def change_image_count(self, AUTOMAT_PIN):
         self.image_count = 1
         self.state_automat = 1
 
     
-
+    # This function check if the esp32-cam is connect to the wifi or not
     def check_connection(self):
         connected = False
         while not connected:
             try:
                 self.imgResponse = urllib.request.urlopen("http://192.168.43.117/capture?", timeout=5)
-                self.control_led('1')
+                self.control_led('100')
                 connected = True
             except:
-                self.control_led("111")
-
+                self.control_led("000")
+           
+    # This function return the photo taken from the esp32-cam and its predictions
     def predict(self):
         imgNp = np.array(bytearray(self.imgResponse.read()), dtype=np.uint8)
         frame = cv.imdecode(imgNp, -1)
         return frame, self.model(frame)
-
+    # This function  control the leds based on state_code
     def control_led(self, state_code):
         # (000: normal / 001: nothing / 011: reversed on x axis / 100: left / 101: tilted_right / 110: tilted_left)
-        if state_code == "000":
+         if state_code == "000":
+            print("failed to connect the esp32")
+            self.led_ready.off()
+            self.led_correct.off()
+            self.led_defective1.off()
+        elif state_code =="100":
+            self.led_ready.on()
+            print("esp32 is connected")
+        elif state_code == "010":
             print("Normal")
             self.led_correct.on()
             self.led_defective1.off()
-            self.led_defective2.off()
-            self.led_defective3.off()
+            GPIO.output(self.SIGNAL_PIN, 1)  
         elif state_code == "001":
-            print("Nothing")
-            self.led_correct.off()
-            self.led_defective1.off()
-            self.led_defective2.off()
-            self.led_defective3.on()
-        elif state_code == "011":
-            print("Inversed")
-            self.led_correct.off()
-            self.led_defective1.off()
-            self.led_defective2.on()
-            self.led_defective3.on()
-        elif state_code == "100":
-            print("Left")
+            print("defect")
             self.led_correct.off()
             self.led_defective1.on()
-            self.led_defective2.off()
-            self.led_defective3.off()
-        elif state_code == "101":
-            print("Titled_right")
-            self.led_correct.off()
-            self.led_defective1.on()
-            self.led_defective2.off()
-            self.led_defective3.on()
-        elif state_code == "110":
-            print("Titled_right")
-            self.led_correct.off()
-            self.led_defective1.on()
-            self.led_defective2.on()
-            self.led_defective3.on()
-        elif state_code == "111":
-            print("failed...")
-            self.led_ready.off()
-            self.led_correct.off()
-            self.led_defective1.on()
-            self.led_defective2.on()
-            self.led_defective3.on()
-        elif state_code =="1":
-            self.led_ready.on()
-            print("done")
+            GPIO.output(self.SIGNAL_PIN, 0)
+        
             
                         
             
@@ -149,7 +124,7 @@ class setUp:
                 xmin, ymin, xmax, ymax = row[0], row[1], row[2], row[3]
                 center_x = (xmin + xmax) / 2
                 if center_x < width / 2:
-                    self.control_led("100")
+                    self.control_led("001")
                 if row[6] == "part":
                     x1, y1, x2, y2 = row[:4].astype(int)
                     bbox_height_part = y2 - y1
@@ -157,21 +132,21 @@ class setUp:
                     x1n, y1n, x2, y2n = row[:4].astype(int)
                     bbox_height_normal = y2n - y1n
                 if bbox_height_part and bbox_height_normal:
-                    ratio_position = bbox_height_part / bbox_height_normal
-                    ratio_word = (y1 - y1n) * 100 // (y2n - y1n)
+                    ratio_word = bbox_height_part / bbox_height_normal
+                    ratio_position = (y1 - y1n) * 100 // (y2n - y1n)
                     bbox_height_part = None
                     bbox_height_normal = None
+                    if ratio_word > 0.51:
+                        self.control_led("001")
+                    else:
+                        self.control_led("010")   
                     if ratio_position > 40:
-                        self.control_led("101")
+                        self.control_led("001")
                     else:
-                        self.control_led("000")   
-                    if ratio_word > 50:
-                        self.control_led("110")
-                    else:
-                        self.control_led("000")   
+                        self.control_led("010")   
 
                 if row[6] == "Inverted":
-                        self.control_led("011")
+                        self.control_led("001")
 
     def continues_mode(self):
         self.check_connection()
