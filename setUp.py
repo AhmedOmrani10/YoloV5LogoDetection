@@ -24,20 +24,23 @@ class setUp:
 
         # Define some constants for pin numbers
         self.AUTOMAT_PIN = 33
-        self.BUTTON_PIN = 22
         self.READY_PIN = 17
         self.RESULT_READY_PIN = 35
         self.CORRECT_PIN = 18
         self.DEFECTIVE1_PIN = 27
         self.SIGNAL_PIN = 22
+        self.SIGNAL_READY_PIN = 24
+
+
+        
        
 
         # Set up the GPIO pins
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.RESULT_READY_PIN, GPIO.OUT)       
-        GPIO.setup(self.self.SIGNAL_PIN, GPIO.OUT)
+        GPIO.setup(self.SIGNAL_PIN, GPIO.OUT)
+        GPIO.setup(self.SIGNAL_READY_PIN, GPIO.OUT)
         GPIO.setup(self.AUTOMAT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(self.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
         # Set up the leds' pins
         self.led_ready = LED(self.READY_PIN)
@@ -56,13 +59,10 @@ class setUp:
         # Define the confidence for the model
         self.model.conf = 0.85
 
-        # Set up an interrupt for the button
-        GPIO.add_event_detect(self.BUTTON_PIN, GPIO.BOTH, callback=self.change_state, bouncetime=500)
+        # Set up an interrupt for the trigger
         GPIO.add_event_detect(self.AUTOMAT_PIN, GPIO.RISING, callback=self.change_image_count, bouncetime=500)
        
-    # This function alter between optimal mode and continues mode
-    def change_state(self, BUTTON_PIN):
-        self.state = not self.state
+    
         
     # This function change the image_count and the state_automat to 1
     def change_image_count(self, AUTOMAT_PIN):
@@ -88,14 +88,15 @@ class setUp:
         return frame, self.model(frame)
     # This function  control the leds based on state_code
     def control_led(self, state_code):
-        # (000: normal / 001: nothing / 011: reversed on x axis / 100: left / 101: tilted_right / 110: tilted_left)
          if state_code == "000":
             print("failed to connect the esp32")
             self.led_ready.off()
             self.led_correct.off()
             self.led_defective1.off()
+            GPIO.output(self.SIGNAL_READY_PIN, 0)  
          elif state_code =="100":
             self.led_ready.on()
+            GPIO.output(self.SIGNAL_READY_PIN, 1)  
             print("esp32 is connected")
          elif state_code == "010":
             print("Normal")
@@ -145,11 +146,7 @@ class setUp:
                 if row[6] == "Inverted":
                         self.control_led("001")
 
-    def continues_mode(self):
-        self.check_connection()
-        frame, result = self.predict()
-        height, width, _ = frame.shape
-        self.show_result(result, width)
+    
         
 
     def optimal_mode(self):
@@ -158,10 +155,10 @@ class setUp:
         height, width, _ = frame.shape
         self.show_result(result, width)
         GPIO.output(self.RESULT_READY_PIN, 1)
-        state_ready = GPIO.input(self.RESULT_READY_PIN)
-        print("State of GPIO pin 35: {}".format(state_ready))
+        #state_ready = GPIO.input(self.RESULT_READY_PIN)
+        #print("State of GPIO pin 35: {}".format(state_ready))
         time.sleep(0.25)
         GPIO.output(self.RESULT_READY_PIN, 0)
-        state_ready = GPIO.input(self.RESULT_READY_PIN)
-        print("State of GPIO pin 35: {}".format(state_ready))
+        #state_ready = GPIO.input(self.RESULT_READY_PIN)
+        #print("State of GPIO pin 35: {}".format(state_ready))
         return 0 , 0
