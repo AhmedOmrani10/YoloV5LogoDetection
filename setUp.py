@@ -94,15 +94,15 @@ class setUp:
             self.led_ready.off()
             self.led_correct.off()
             self.led_defective1.off()
-        elif state_code =="100":
+         elif state_code =="100":
             self.led_ready.on()
             print("esp32 is connected")
-        elif state_code == "010":
+         elif state_code == "010":
             print("Normal")
             self.led_correct.on()
             self.led_defective1.off()
             GPIO.output(self.SIGNAL_PIN, 1)  
-        elif state_code == "001":
+         elif state_code == "001":
             print("defect")
             self.led_correct.off()
             self.led_defective1.on()
@@ -111,7 +111,7 @@ class setUp:
             
                         
             
-        else:
+         else:
             print("Invalid state code")
 
     def show_result(self, result, width):
@@ -136,14 +136,11 @@ class setUp:
                     ratio_position = (y1 - y1n) * 100 // (y2n - y1n)
                     bbox_height_part = None
                     bbox_height_normal = None
-                    if ratio_word > 0.51:
+                    if ratio_word > 0.51 or ratio_position > 40 :
                         self.control_led("001")
                     else:
                         self.control_led("010")   
-                    if ratio_position > 40:
-                        self.control_led("001")
-                    else:
-                        self.control_led("010")   
+                      
 
                 if row[6] == "Inverted":
                         self.control_led("001")
