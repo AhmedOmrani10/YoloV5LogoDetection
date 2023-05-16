@@ -150,7 +150,7 @@ class setUp:
         
 
     def optimal_mode(self):
-        self.check_connection()
+        
         frame, result = self.predict()
         height, width, _ = frame.shape
         self.show_result(result, width)
